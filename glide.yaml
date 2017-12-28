@@ -8,6 +8,10 @@ import:
   subpackages:
     - plugin/pkg/client/auth/gcp
   version: v4.0.0
+- package: k8s.io/code-generator
+  version: master
+- package: k8s.io/gengo
+  version: master
 - package: github.com/gosuri/uitable
 - package: github.com/coreos/prometheus-operator
   version: 0.12.0
