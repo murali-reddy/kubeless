@@ -1,5 +1,5 @@
-hash: 4890cba8a079e373ddba3bcbf1e96f2088bcdeb0078816d010216894ea579d3d
-updated: 2017-11-29T10:45:45.316472+01:00
+hash: 881cb48f1d7f139313dfe4184b84c8aaf09c69e547049f0e41c1df333e61bcec
+updated: 2017-12-28T10:14:04.093203878+05:30
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -69,13 +69,6 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/juju/ratelimit
   version: 5b9ff866471762aa2ab2dced63c9fb6f53921342
-- name: github.com/ksonnet/ksonnet-lib
-  version: 46d8bb9e605dc3d3977e2e2054e921ed32dd699f
-  subpackages:
-  - ksonnet-gen/jsonnet
-  - ksonnet-gen/ksonnet
-  - ksonnet-gen/kubespec
-  - ksonnet-gen/kubeversion
 - name: github.com/mailru/easyjson
   version: d5b7844b561a7bc640052f1b935f7b800330d7e0
   subpackages:
@@ -84,10 +77,8 @@ imports:
   - jwriter
 - name: github.com/mattn/go-runewidth
   version: 97311d9f7767e3d6f422ea06661bc2c7a19e8a5d
-- name: github.com/olekukonko/tablewriter
-  version: a7a4c189eb47ed33ce7b35f2880070a0c82a67d4
 - name: github.com/pkg/errors
-  version: f15c970de5b76fac0b59abb32d62c17cc7bed265
+  version: e881fd58d78e04cf6d0de1217f8707c8cc2249bc
 - name: github.com/PuerkitoBio/purell
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
@@ -95,9 +86,9 @@ imports:
 - name: github.com/robfig/cron
   version: 2315d5715e36303a941d907f038da7f7c44c773b
 - name: github.com/sirupsen/logrus
-  version: 95cd2b9c79aa5e72ab0bc69b7ccc2be15bf850f6
+  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
 - name: github.com/spf13/cobra
-  version: 1be1d2841c773c01bee8289f55f7463b6e2c2539
+  version: ccaecb155a2177302cb56cae929251a256d0f646
 - name: github.com/spf13/pflag
   version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
 - name: github.com/ugorji/go
@@ -105,7 +96,7 @@ imports:
   subpackages:
   - codec
 - name: golang.org/x/crypto
-  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
+  version: d585fd2cc9195196078f516b69daff6744ef5e84
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net
@@ -313,4 +304,8 @@ imports:
   - util/integer
   - util/jsonpath
   - util/workqueue
+- name: k8s.io/code-generator
+  version: bfddfc848855622780eb9cf0910747b485415484
+- name: k8s.io/gengo
+  version: 1ef560bbde5195c01629039ad3b337ce63e7b321
 testImports: []
