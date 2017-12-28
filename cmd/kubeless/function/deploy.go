@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/kubeless/kubeless/pkg/langruntime"
-	"github.com/kubeless/kubeless/pkg/spec"
+	"github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
 	"github.com/kubeless/kubeless/pkg/utils"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"

@@ -28,7 +28,7 @@ import (
 
 	"github.com/kubeless/kubeless/pkg/langruntime"
 
-	"github.com/kubeless/kubeless/pkg/spec"
+	"github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
 	"github.com/sirupsen/logrus"
 
 	"k8s.io/client-go/kubernetes"
