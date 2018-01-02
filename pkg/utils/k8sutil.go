@@ -31,7 +31,7 @@ import (
 	spec "github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
 	"github.com/sirupsen/logrus"
 
-	autoscaling "k8s.io/api/autoscaling/v1"
+	autoscaling "k8s.io/api/autoscaling/v2beta1"
 	batchv1 "k8s.io/api/batch/v1"
 	batchv2alpha1 "k8s.io/api/batch/v2alpha1"
 	"k8s.io/api/core/v1"
@@ -892,7 +892,7 @@ func EnsureFuncCronJob(client rest.Interface, funcObj *spec.Function, or []metav
 
 // CreateAutoscale creates HPA object for function
 func CreateAutoscale(client kubernetes.Interface, hpa autoscaling.HorizontalPodAutoscaler) error {
-	_, err := client.AutoscalingV1().HorizontalPodAutoscalers(hpa.ObjectMeta.Namespace).Create(&hpa)
+	_, err := client.AutoscalingV2beta1().HorizontalPodAutoscalers(hpa.ObjectMeta.Namespace).Create(&hpa)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
+	kubelessapi "github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
 	"github.com/spf13/cobra"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -130,7 +130,7 @@ func getContentType(filename string, fbytes []byte) string {
 	return contentType
 }
 
-func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, file, deps, runtime, topic, schedule, runtimeImage, mem, timeout string, triggerHTTP bool, envs, labels []string, defaultFunction spec.Function) (*spec.Function, error) {
+func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, file, deps, runtime, topic, schedule, runtimeImage, mem, timeout string, triggerHTTP bool, envs, labels []string, defaultFunction kubelessapi.Function) (*kubelessapi.Function, error) {
 
 	if handler == "" {
 		handler = defaultFunction.Spec.Handler
@@ -144,7 +144,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 	} else {
 		functionBytes, err := ioutil.ReadFile(file)
 		if err != nil {
-			return &spec.Function{}, err
+			return &kubelessapi.Function{}, err
 		}
 		contentType = getContentType(file, functionBytes)
 		if contentType == "text" {
@@ -154,7 +154,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		}
 		checksum, err = getFileSha256(file)
 		if err != nil {
-			return &spec.Function{}, err
+			return &kubelessapi.Function{}, err
 		}
 	}
 
@@ -207,7 +207,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		funcEnv = defaultFunction.Spec.Template.Spec.Containers[0].Env
 	}
 
-	funcLabels := defaultFunction.Metadata.Labels
+	funcLabels := defaultFunction.ObjectMeta.Labels
 	if len(funcLabels) == 0 {
 		funcLabels = make(map[string]string)
 	}
@@ -221,7 +221,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		funcMem, err := parseMemory(mem)
 		if err != nil {
 			err = fmt.Errorf("Wrong format of the memory value: %v", err)
-			return &spec.Function{}, err
+			return &kubelessapi.Function{}, err
 		}
 		resource := map[v1.ResourceName]resource.Quantity{
 			v1.ResourceMemory: funcMem,
@@ -240,17 +240,17 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		runtimeImage = defaultFunction.Spec.Template.Spec.Containers[0].Image
 	}
 
-	return &spec.Function{
+	return &kubelessapi.Function{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Function",
 			APIVersion: "k8s.io/v1",
 		},
-		Metadata: metav1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      funcName,
 			Namespace: ns,
 			Labels:    funcLabels,
 		},
-		Spec: spec.FunctionSpec{
+		Spec: kubelessapi.FunctionSpec{
 			Handler:             handler,
 			Runtime:             runtime,
 			Type:                funcType,

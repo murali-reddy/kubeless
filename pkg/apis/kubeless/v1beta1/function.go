@@ -19,7 +19,7 @@ package v1beta1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/api/core/v1"
-	 autoscale "k8s.io/api/autoscaling/v1"
+	"k8s.io/api/autoscaling/v2beta1"
 )
 
 // +genclient
@@ -45,7 +45,7 @@ type FunctionSpec struct {
 	Timeout                 string                           `json:"timeout"`               // Maximum timeout for the function to complete its execution
 	Deps                    string                           `json:"deps"`                  // Function dependencies
 	Template                v1.PodTemplateSpec               `json:"template" protobuf:"bytes,3,opt,name=template"`
-	HorizontalPodAutoscaler autoscale.HorizontalPodAutoscaler `json:"horizontalPodAutoscaler" protobuf:"bytes,3,opt,name=horizontalPodAutoscaler"`
+	HorizontalPodAutoscaler v2beta1.HorizontalPodAutoscaler `json:"horizontalPodAutoscaler" protobuf:"bytes,3,opt,name=horizontalPodAutoscaler"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

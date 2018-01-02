@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
+	kubelessapi "github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
 	"github.com/kubeless/kubeless/pkg/utils"
 )
 
@@ -72,9 +72,9 @@ func init() {
 }
 
 func doList(w io.Writer, crdClient rest.Interface, apiV1Client kubernetes.Interface, ns, output string, args []string) error {
-	var list []*spec.Function
+	var list []*kubelessapi.Function
 	if len(args) == 0 {
-		funcList := spec.FunctionList{}
+		funcList := kubelessapi.FunctionList{}
 		err := crdClient.Get().
 			Resource("functions").
 			Namespace(ns).
@@ -85,9 +85,9 @@ func doList(w io.Writer, crdClient rest.Interface, apiV1Client kubernetes.Interf
 		}
 		list = funcList.Items
 	} else {
-		list = make([]*spec.Function, 0, len(args))
+		list = make([]*kubelessapi.Function, 0, len(args))
 		for _, arg := range args {
-			f := spec.Function{}
+			f := kubelessapi.Function{}
 			err := crdClient.Get().
 				Resource("functions").
 				Namespace(ns).
@@ -127,20 +127,20 @@ func parseDeps(deps, runtime string) (res string, err error) {
 }
 
 // printFunctions formats the output of function list
-func printFunctions(w io.Writer, functions []*spec.Function, cli kubernetes.Interface, output string) error {
+func printFunctions(w io.Writer, functions []*kubelessapi.Function, cli kubernetes.Interface, output string) error {
 	if output == "" {
 		table := uitable.New()
 		table.MaxColWidth = 50
 		table.Wrap = true
 		table.AddRow("NAME", "NAMESPACE", "HANDLER", "RUNTIME", "TYPE", "TOPIC", "DEPENDENCIES", "STATUS")
 		for _, f := range functions {
-			n := f.Metadata.Name
+			n := f.ObjectMeta.Name
 			h := f.Spec.Handler
 			r := f.Spec.Runtime
 			t := f.Spec.Type
 			tp := f.Spec.Topic
-			ns := f.Metadata.Namespace
-			status, err := getDeploymentStatus(cli, f.Metadata.Name, f.Metadata.Namespace)
+			ns := f.ObjectMeta.Namespace
+			status, err := getDeploymentStatus(cli, f.ObjectMeta.Name, f.ObjectMeta.Namespace)
 			if err != nil && k8sErrors.IsNotFound(err) {
 				status = "MISSING: Check controller logs"
 			} else if err != nil {
@@ -159,7 +159,7 @@ func printFunctions(w io.Writer, functions []*spec.Function, cli kubernetes.Inte
 		table.Wrap = true
 		table.AddRow("NAME", "NAMESPACE", "HANDLER", "RUNTIME", "TYPE", "TOPIC", "DEPENDENCIES", "STATUS", "MEMORY", "ENV", "LABEL", "SCHEDULE")
 		for _, f := range functions {
-			n := f.Metadata.Name
+			n := f.ObjectMeta.Name
 			h := f.Spec.Handler
 			r := f.Spec.Runtime
 			t := f.Spec.Type
@@ -169,8 +169,8 @@ func printFunctions(w io.Writer, functions []*spec.Function, cli kubernetes.Inte
 				return err
 			}
 			s := f.Spec.Schedule
-			ns := f.Metadata.Namespace
-			status, err := getDeploymentStatus(cli, f.Metadata.Name, f.Metadata.Namespace)
+			ns := f.ObjectMeta.Namespace
+			status, err := getDeploymentStatus(cli, f.ObjectMeta.Name, f.ObjectMeta.Namespace)
 			if err != nil && k8sErrors.IsNotFound(err) {
 				status = "MISSING: Check controller logs"
 			} else if err != nil {
@@ -189,9 +189,9 @@ func printFunctions(w io.Writer, functions []*spec.Function, cli kubernetes.Inte
 				env = buffer.String()
 			}
 			label := ""
-			if len(f.Metadata.Labels) > 0 {
+			if len(f.ObjectMeta.Labels) > 0 {
 				var buffer bytes.Buffer
-				for k, v := range f.Metadata.Labels {
+				for k, v := range f.ObjectMeta.Labels {
 					buffer.WriteString(k + " : " + v + "\n")
 				}
 				label = buffer.String()
