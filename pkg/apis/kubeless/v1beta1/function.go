@@ -18,9 +18,8 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/autoscaling/v2alpha1"
+	"k8s.io/api/core/v1"
+	 autoscale "k8s.io/api/autoscaling/v1"
 )
 
 // +genclient
@@ -46,34 +45,16 @@ type FunctionSpec struct {
 	Timeout                 string                           `json:"timeout"`               // Maximum timeout for the function to complete its execution
 	Deps                    string                           `json:"deps"`                  // Function dependencies
 	Template                v1.PodTemplateSpec               `json:"template" protobuf:"bytes,3,opt,name=template"`
-	HorizontalPodAutoscaler v2alpha1.HorizontalPodAutoscaler `json:"horizontalPodAutoscaler" protobuf:"bytes,3,opt,name=horizontalPodAutoscaler"`
+	HorizontalPodAutoscaler autoscale.HorizontalPodAutoscaler `json:"horizontalPodAutoscaler" protobuf:"bytes,3,opt,name=horizontalPodAutoscaler"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // FunctionList contains map of functions
 type FunctionList struct {
 	metav1.TypeMeta `json:",inline"`
-	Metadata        metav1.ListMeta `json:"metadata"`
+	metav1.ListMeta `json:"metadata"`
 
 	// Items is a list of third party objects
 	Items []*Function `json:"items"`
-}
-
-// GetObjectKind required to satisfy Object interface
-func (e *Function) GetObjectKind() schema.ObjectKind {
-	return &e.TypeMeta
-}
-
-// GetObjectMeta required to satisfy ObjectMetaAccessor interface
-func (e *Function) GetObjectMeta() metav1.Object {
-	return &e.Metadata
-}
-
-// GetObjectKind required to satisfy Object interface
-func (el *FunctionList) GetObjectKind() schema.ObjectKind {
-	return &el.TypeMeta
-}
-
-// GetListMeta required to satisfy ListMetaAccessor interface
-func (el *FunctionList) GetListMeta() metav1.List {
-	return &el.Metadata
 }
