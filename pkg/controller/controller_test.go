@@ -3,12 +3,12 @@ package controller
 import (
 	"testing"
 
+	"k8s.io/api/autoscaling/v1"
+	batchv2alpha1 "k8s.io/api/batch/v2alpha1"
+	"k8s.io/api/core/v1"
+	xv1beta1 "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/autoscaling/v2alpha1"
-	batchv2alpha1 "k8s.io/client-go/pkg/apis/batch/v2alpha1"
-	xv1beta1 "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	ktesting "k8s.io/client-go/testing"
 )
 

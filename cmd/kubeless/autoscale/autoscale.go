@@ -18,10 +18,10 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"k8s.io/api/autoscaling/v1"
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/api/v1"
-	"k8s.io/client-go/pkg/apis/autoscaling/v2alpha1"
 )
 
 //AutoscaleCmd contains first-class command for autoscale
@@ -89,7 +89,7 @@ func getHorizontalAutoscaleDefinition(name, ns, metric string, min, max int32, v
 
 	return v2alpha1.HorizontalPodAutoscaler{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "autoscaling/v2alpha1",
+			APIVersion: "autoscaling/v1",
 			Kind:       "HorizontalPodAutoscaler",
 		},
 		ObjectMeta: metav1.ObjectMeta{

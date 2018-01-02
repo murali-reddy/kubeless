@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/pkg/apis/autoscaling/v2alpha1"
 )
 
 func TestGetHorizontalAutoscaleDefinition(t *testing.T) {
