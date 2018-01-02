@@ -208,7 +208,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		funcEnv = defaultFunction.Spec.Template.Spec.Containers[0].Env
 	}
 
-	funcLabels := defaultFunction.Metadata.Labels
+	funcLabels := defaultFunction.ObjectMeta.Labels
 	if len(funcLabels) == 0 {
 		funcLabels = make(map[string]string)
 	}
@@ -280,7 +280,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 			Kind:       "Function",
 			APIVersion: "k8s.io/v1",
 		},
-		Metadata: metav1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      funcName,
 			Namespace: ns,
 			Labels:    funcLabels,

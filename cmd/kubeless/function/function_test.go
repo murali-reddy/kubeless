@@ -110,7 +110,7 @@ func TestGetFunctionDescription(t *testing.T) {
 			Kind:       "Function",
 			APIVersion: "k8s.io/v1",
 		},
-		Metadata: metav1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
 			Labels: map[string]string{
@@ -204,7 +204,7 @@ func TestGetFunctionDescription(t *testing.T) {
 			Kind:       "Function",
 			APIVersion: "k8s.io/v1",
 		},
-		Metadata: metav1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
 			Labels: map[string]string{
