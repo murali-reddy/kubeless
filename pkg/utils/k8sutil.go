@@ -42,6 +42,8 @@ import (
 
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
+	scheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
@@ -352,7 +354,7 @@ func configureClient(group, version, apiPath string, config *rest.Config) *rest.
 	result.GroupVersion = &groupversion
 	result.APIPath = apiPath
 	result.ContentType = runtime.ContentTypeJSON
-	result.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: api.Codecs}
+	result.NegotiatedSerializer = serializer.DirectCodecFactory{CodecFactory: scheme.Codecs}
 	schemeBuilder := runtime.NewSchemeBuilder(
 		func(scheme *runtime.Scheme) error {
 			scheme.AddKnownTypes(
@@ -362,25 +364,9 @@ func configureClient(group, version, apiPath string, config *rest.Config) *rest.
 			)
 			return nil
 		})
-	metav1.AddToGroupVersion(api.Scheme, groupversion)
-	schemeBuilder.AddToScheme(api.Scheme)
+	metav1.AddToGroupVersion(scheme.Scheme, groupversion)
+	schemeBuilder.AddToScheme(scheme.Scheme)
 	return &result
-}
-
-// addInitContainerAnnotation is a hot fix to add annotation to deployment for init container to run
-func addInitContainerAnnotation(dpm *v1beta1.Deployment) error {
-	if len(dpm.Spec.Template.Spec.InitContainers) > 0 {
-		value, err := json.Marshal(dpm.Spec.Template.Spec.InitContainers)
-		if err != nil {
-			return err
-		}
-		if dpm.Spec.Template.Annotations == nil {
-			dpm.Spec.Template.Annotations = make(map[string]string)
-		}
-		dpm.Spec.Template.Annotations[v1.PodInitContainersAnnotationKey] = string(value)
-		dpm.Spec.Template.Annotations[v1.PodInitContainersBetaAnnotationKey] = string(value)
-	}
-	return nil
 }
 
 // CreateIngress creates ingress rule for a specific function
@@ -585,6 +571,7 @@ func EnsureFuncService(client kubernetes.Interface, funcObj *spec.Function, or [
 
 // EnsureFuncDeployment creates/updates a function deployment
 func EnsureFuncDeployment(client kubernetes.Interface, funcObj *spec.Function, or []metav1.OwnerReference) error {
+	var err error
 	runtimeVolumeName := funcObj.ObjectMeta.Name
 	depsVolumeName := funcObj.ObjectMeta.Name + "-deps"
 	podAnnotations := map[string]string{
@@ -616,11 +603,7 @@ func EnsureFuncDeployment(client kubernetes.Interface, funcObj *spec.Function, o
 	}
 
 	//copy all func's Spec.Template to the deployment
-	tmplCopy, err := api.Scheme.DeepCopy(funcObj.Spec.Template)
-	if err != nil {
-		return err
-	}
-	dpm.Spec.Template = tmplCopy.(v1.PodTemplateSpec)
+	dpm.Spec.Template = *funcObj.Spec.Template.DeepCopy()
 
 	//append data to dpm spec
 	if len(dpm.Spec.Template.ObjectMeta.Labels) == 0 {
@@ -756,8 +739,6 @@ func EnsureFuncDeployment(client kubernetes.Interface, funcObj *spec.Function, o
 		// update deployment for loading dependencies
 		langruntime.UpdateDeployment(dpm, runtimeVolumeMount.MountPath, funcObj.Spec.Runtime)
 	}
-	//TODO: remove this when init containers becomes a stable feature
-	addInitContainerAnnotation(dpm)
 
 	// add liveness Probe to deployment
 	if funcObj.Spec.Type != pubsubFunc {
