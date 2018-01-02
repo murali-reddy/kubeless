@@ -29,7 +29,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kubeless/kubeless/pkg/spec"
+	api "github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -131,7 +131,7 @@ func getContentType(filename string, fbytes []byte) string {
 	return contentType
 }
 
-func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, file, deps, runtime, topic, schedule, runtimeImage, mem, timeout string, triggerHTTP bool, headlessFlag *bool, portFlag *int32, envs, labels []string, defaultFunction spec.Function) (*spec.Function, error) {
+func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, file, deps, runtime, topic, schedule, runtimeImage, mem, timeout string, triggerHTTP bool, headlessFlag *bool, portFlag *int32, envs, labels []string, defaultFunction api.Function) (*api.Function, error) {
 
 	if handler == "" {
 		handler = defaultFunction.Spec.Handler
@@ -145,7 +145,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 	} else {
 		functionBytes, err := ioutil.ReadFile(file)
 		if err != nil {
-			return &spec.Function{}, err
+			return &api.Function{}, err
 		}
 		contentType = getContentType(file, functionBytes)
 		if contentType == "text" {
@@ -155,7 +155,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		}
 		checksum, err = getFileSha256(file)
 		if err != nil {
-			return &spec.Function{}, err
+			return &api.Function{}, err
 		}
 	}
 
@@ -222,7 +222,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		funcMem, err := parseMemory(mem)
 		if err != nil {
 			err = fmt.Errorf("Wrong format of the memory value: %v", err)
-			return &spec.Function{}, err
+			return &api.Function{}, err
 		}
 		resource := map[v1.ResourceName]resource.Quantity{
 			v1.ResourceMemory: funcMem,
@@ -275,7 +275,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 		svcSpec.Ports[0].TargetPort = defaultFunction.Spec.ServiceSpec.Ports[0].TargetPort
 	}
 
-	return &spec.Function{
+	return &api.Function{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Function",
 			APIVersion: "k8s.io/v1",
@@ -285,7 +285,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 			Namespace: ns,
 			Labels:    funcLabels,
 		},
-		Spec: spec.FunctionSpec{
+		Spec: api.FunctionSpec{
 			Handler:             handler,
 			Runtime:             runtime,
 			Type:                funcType,
