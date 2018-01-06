@@ -278,7 +278,7 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 	return &api.Function{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Function",
-			APIVersion: "k8s.io/v1",
+			APIVersion: "kubeless.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      funcName,
