@@ -17,15 +17,38 @@ limitations under the License.
 package trigger
 
 import (
+	"github.com/kubeless/kubeless/pkg/utils"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete <function_name>",
+	Use:   "delete <trigger_name>",
 	Short: "delete a trigger from Kubeless",
 	Long:  `delete a trigger from Kubeless`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			logrus.Fatal("Need exactly one argument - trigger name")
+		}
+		triggerName := args[0]
 
+		ns, err := cmd.Flags().GetString("namespace")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		if ns == "" {
+			ns = utils.GetDefaultNamespace()
+		}
+
+		kubelessClient, err := utils.GetKubelessClientOutCluster()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		err = utils.DeleteTriggerResource(kubelessClient, triggerName, ns)
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	},
 }
 

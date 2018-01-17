@@ -24,7 +24,7 @@ import (
 var TriggerCmd = &cobra.Command{
 	Use:   "trigger SUBCOMMAND",
 	Short: "trigger specific operations",
-	Long:  `trigger command allows user to list, deploy, edit, delete triggers running on Kubeless`,
+	Long:  `trigger command allows user to create, list, update, delete triggers running on Kubeless`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},

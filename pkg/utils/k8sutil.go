@@ -121,8 +121,8 @@ func GetClientInCluster() (versioned.Interface, error) {
 	return kubelessClient, nil
 }
 
-// GetFunctionClientOutCluster returns function clientset to the request from outside of cluster
-func GetFunctionClientOutCluster() (versioned.Interface, error) {
+// GetKubelessClientOutCluster returns kubeless clientset to the request from outside of cluster
+func GetKubelessClientOutCluster() (versioned.Interface, error) {
 	config, err := BuildOutOfClusterConfig()
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func GetDefaultNamespace() string {
 
 // GetFunction returns specification of a function
 func GetFunction(funcName, ns string) (kubelessApi.Function, error) {
-	kubelessClient, err := GetFunctionClientOutCluster()
+	kubelessClient, err := GetKubelessClientOutCluster()
 	if err != nil {
 		return kubelessApi.Function{}, err
 	}
@@ -166,8 +166,8 @@ func GetFunction(funcName, ns string) (kubelessApi.Function, error) {
 	return *f, nil
 }
 
-// CreateK8sCustomResource will create a custom function object
-func CreateK8sCustomResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
+// CreateFunctionResource will create a custom function object
+func CreateFunctionResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
 	_, err := kubelessClient.KubelessV1beta1().Functions(f.Namespace).Create(f)
 	if err != nil {
 		return err
@@ -175,8 +175,8 @@ func CreateK8sCustomResource(kubelessClient versioned.Interface, f *kubelessApi.
 	return nil
 }
 
-// UpdateK8sCustomResource applies changes to the function custom object
-func UpdateK8sCustomResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
+// UpdateFunctionResource applies changes to the function custom object
+func UpdateFunctionResource(kubelessClient versioned.Interface, f *kubelessApi.Function) error {
 	data, err := json.Marshal(f)
 	if err != nil {
 		return err
@@ -186,9 +186,39 @@ func UpdateK8sCustomResource(kubelessClient versioned.Interface, f *kubelessApi.
 	return err
 }
 
-// DeleteK8sCustomResource will delete custom function object
-func DeleteK8sCustomResource(kubelessClient versioned.Interface, funcName, ns string) error {
+// DeleteFunctionResource will delete custom function object
+func DeleteFunctionResource(kubelessClient versioned.Interface, funcName, ns string) error {
 	err := kubelessClient.KubelessV1beta1().Functions(ns).Delete(funcName, &metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateTriggerResource will create a custom function object
+func CreateTriggerResource(kubelessClient versioned.Interface, trigger *kubelessApi.Trigger) error {
+	_, err := kubelessClient.KubelessV1beta1().Triggers(trigger.Namespace).Create(trigger)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateTriggerResource applies changes to the function custom object
+func UpdateTriggerResource(kubelessClient versioned.Interface, f *kubelessApi.Trigger) error {
+	data, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+
+	_, err = kubelessClient.KubelessV1beta1().Triggers(f.Namespace).Patch(f.Name, types.MergePatchType, data)
+	return err
+}
+
+// DeleteTriggerResource will delete custom function object
+func DeleteTriggerResource(kubelessClient versioned.Interface, triggerName, ns string) error {
+	err := kubelessClient.KubelessV1beta1().Triggers(ns).Delete(triggerName, &metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}

@@ -40,12 +40,12 @@ var deleteCmd = &cobra.Command{
 			ns = utils.GetDefaultNamespace()
 		}
 
-		kubelessClient, err := utils.GetFunctionClientOutCluster()
+		kubelessClient, err := utils.GetKubelessClientOutCluster()
 		if err != nil {
 			logrus.Fatal(err)
 		}
 
-		err = utils.DeleteK8sCustomResource(kubelessClient, funcName, ns)
+		err = utils.DeleteFunctionResource(kubelessClient, funcName, ns)
 		if err != nil {
 			logrus.Fatal(err)
 		}
