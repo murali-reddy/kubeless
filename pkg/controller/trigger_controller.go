@@ -39,33 +39,33 @@ import (
 )
 
 const (
-	maxRetries = 5
-	funcKind   = "Function"
-	funcAPI    = "kubeless.io"
+	triggerMaxRetries = 5
+	objKind           = "Trigger"
+	objAPI            = "kubeless.io"
 )
 
-// Controller object
-type Controller struct {
+// TriggerController object
+type TriggerController struct {
 	logger         *logrus.Entry
 	clientset      kubernetes.Interface
 	kubelessclient versioned.Interface
 	smclient       *monitoringv1alpha1.MonitoringV1alpha1Client
-	Functions      map[string]*kubelessApi.Function
+	Triggers       map[string]*kubelessApi.Trigger
 	queue          workqueue.RateLimitingInterface
 	informer       cache.SharedIndexInformer
 }
 
-// Config contains k8s client of a controller
-type Config struct {
-	KubeCli        kubernetes.Interface
-	FunctionClient versioned.Interface
+// TriggerConfig contains k8s client of a controller
+type TriggerConfig struct {
+	KubeCli       kubernetes.Interface
+	TriggerClient versioned.Interface
 }
 
-// New initializes a controller object
-func New(cfg Config, smclient *monitoringv1alpha1.MonitoringV1alpha1Client) *Controller {
+// NewTriggerController initializes a controller object
+func NewTriggerController(cfg TriggerConfig, smclient *monitoringv1alpha1.MonitoringV1alpha1Client) *TriggerController {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
-	informer := kv1beta1.NewFunctionInformer(cfg.FunctionClient, corev1.NamespaceAll, 0, cache.Indexers{})
+	informer := kv1beta1.NewTriggerInformer(cfg.TriggerClient, corev1.NamespaceAll, 0, cache.Indexers{})
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -88,18 +88,18 @@ func New(cfg Config, smclient *monitoringv1alpha1.MonitoringV1alpha1Client) *Con
 		},
 	})
 
-	return &Controller{
-		logger:         logrus.WithField("pkg", "controller"),
+	return &TriggerController{
+		logger:         logrus.WithField("controller", "trigger-controller"),
 		clientset:      cfg.KubeCli,
 		smclient:       smclient,
-		kubelessclient: cfg.FunctionClient,
+		kubelessclient: cfg.TriggerClient,
 		informer:       informer,
 		queue:          queue,
 	}
 }
 
 // Run starts the kubeless controller
-func (c *Controller) Run(stopCh <-chan struct{}) {
+func (c *TriggerController) Run(stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	defer c.queue.ShutDown()
 
@@ -121,22 +121,22 @@ func (c *Controller) Run(stopCh <-chan struct{}) {
 }
 
 // HasSynced is required for the cache.Controller interface.
-func (c *Controller) HasSynced() bool {
+func (c *TriggerController) HasSynced() bool {
 	return c.informer.HasSynced()
 }
 
 // LastSyncResourceVersion is required for the cache.Controller interface.
-func (c *Controller) LastSyncResourceVersion() string {
+func (c *TriggerController) LastSyncResourceVersion() string {
 	return c.informer.LastSyncResourceVersion()
 }
 
-func (c *Controller) runWorker() {
+func (c *TriggerController) runWorker() {
 	for c.processNextItem() {
 		// continue looping
 	}
 }
 
-func (c *Controller) processNextItem() bool {
+func (c *TriggerController) processNextItem() bool {
 	key, quit := c.queue.Get()
 	if quit {
 		return false
@@ -147,7 +147,7 @@ func (c *Controller) processNextItem() bool {
 	if err == nil {
 		// No error, reset the ratelimit counters
 		c.queue.Forget(key)
-	} else if c.queue.NumRequeues(key) < maxRetries {
+	} else if c.queue.NumRequeues(key) < triggerMaxRetries {
 		c.logger.Errorf("Error processing %s (will retry): %v", key, err)
 		c.queue.AddRateLimited(key)
 	} else {
@@ -160,7 +160,7 @@ func (c *Controller) processNextItem() bool {
 	return true
 }
 
-func (c *Controller) getResouceGroupVersion(target string) (string, error) {
+func (c *TriggerController) getResouceGroupVersion(target string) (string, error) {
 	resources, err := c.clientset.Discovery().ServerResources()
 	if err != nil {
 		return "", err
@@ -181,7 +181,7 @@ func (c *Controller) getResouceGroupVersion(target string) (string, error) {
 }
 
 // ensureK8sResources creates/updates k8s objects (deploy, svc, configmap) for the function
-func (c *Controller) ensureK8sResources(funcObj *kubelessApi.Function) error {
+func (c *TriggerController) ensureK8sResources(funcObj *kubelessApi.Function) error {
 	if len(funcObj.ObjectMeta.Labels) == 0 {
 		funcObj.ObjectMeta.Labels = make(map[string]string)
 	}
@@ -242,7 +242,7 @@ func (c *Controller) ensureK8sResources(funcObj *kubelessApi.Function) error {
 	return nil
 }
 
-func (c *Controller) deleteAutoscale(ns, name string) error {
+func (c *TriggerController) deleteAutoscale(ns, name string) error {
 	if c.smclient != nil {
 		// Delete Service monitor if the client is available
 		err := utils.DeleteServiceMonitor(*c.smclient, name, ns)
@@ -259,7 +259,7 @@ func (c *Controller) deleteAutoscale(ns, name string) error {
 }
 
 // deleteK8sResources removes k8s objects of the function
-func (c *Controller) deleteK8sResources(ns, name string) error {
+func (c *TriggerController) deleteK8sResources(ns, name string) error {
 	//check if func is scheduled or not
 	_, err := c.clientset.BatchV2alpha1().CronJobs(ns).Get(fmt.Sprintf("trigger-%s", name), metav1.GetOptions{})
 	if err == nil {
@@ -296,7 +296,7 @@ func (c *Controller) deleteK8sResources(ns, name string) error {
 	return nil
 }
 
-func (c *Controller) processItem(key string) error {
+func (c *TriggerController) processItem(key string) error {
 	c.logger.Infof("Processing change to Function %s", key)
 
 	ns, name, err := cache.SplitMetaNamespaceKey(key)
@@ -331,7 +331,7 @@ func (c *Controller) processItem(key string) error {
 	return nil
 }
 
-func (c *Controller) garbageCollect() error {
+func (c *TriggerController) garbageCollect() error {
 	err := c.collectServices()
 	if err != nil {
 		return err
@@ -347,7 +347,7 @@ func (c *Controller) garbageCollect() error {
 	return nil
 }
 
-func (c *Controller) collectServices() error {
+func (c *TriggerController) collectServices() error {
 	srvs, err := c.clientset.CoreV1().Services(corev1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -362,7 +362,7 @@ func (c *Controller) collectServices() error {
 		// react to delete its belonging objects
 		// Assumption: a service has ownerref Kind = "Function" and APIVersion = "k8s.io" is assumed
 		// to be created by kubeless controller
-		if (srv.OwnerReferences[0].Kind == funcKind) && (srv.OwnerReferences[0].APIVersion == funcAPI) {
+		if (srv.OwnerReferences[0].Kind == objKind) && (srv.OwnerReferences[0].APIVersion == objAPI) {
 			//service and its function are deployed in the same namespace
 			key := fmt.Sprintf("%s/%s", srv.Namespace, srv.OwnerReferences[0].Name)
 			c.queue.Add(key)
@@ -372,7 +372,7 @@ func (c *Controller) collectServices() error {
 	return nil
 }
 
-func (c *Controller) collectDeployment() error {
+func (c *TriggerController) collectDeployment() error {
 	ds, err := c.clientset.AppsV1beta1().Deployments(corev1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -384,7 +384,7 @@ func (c *Controller) collectDeployment() error {
 		}
 		// Assumption: a deployment has ownerref Kind = "Function" and APIVersion = "k8s.io" is assumed
 		// to be created by kubeless controller
-		if (d.OwnerReferences[0].Kind == funcKind) && (d.OwnerReferences[0].APIVersion == funcAPI) {
+		if (d.OwnerReferences[0].Kind == objKind) && (d.OwnerReferences[0].APIVersion == objAPI) {
 			key := fmt.Sprintf("%s/%s", d.Namespace, d.OwnerReferences[0].Name)
 			c.queue.Add(key)
 		}
@@ -393,7 +393,7 @@ func (c *Controller) collectDeployment() error {
 	return nil
 }
 
-func (c *Controller) collectConfigMap() error {
+func (c *TriggerController) collectConfigMap() error {
 	cm, err := c.clientset.CoreV1().ConfigMaps(corev1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		return err
@@ -405,7 +405,7 @@ func (c *Controller) collectConfigMap() error {
 		}
 		// Assumption: a configmap has ownerref Kind = "Function" and APIVersion = "k8s.io" is assumed
 		// to be created by kubeless controller
-		if (m.OwnerReferences[0].Kind == funcKind) && (m.OwnerReferences[0].APIVersion == funcAPI) {
+		if (m.OwnerReferences[0].Kind == objKind) && (m.OwnerReferences[0].APIVersion == objAPI) {
 			key := fmt.Sprintf("%s/%s", m.Namespace, m.OwnerReferences[0].Name)
 			c.queue.Add(key)
 		}

@@ -49,7 +49,7 @@ func TestDeleteK8sResources(t *testing.T) {
 
 	clientset := fake.NewSimpleClientset(&deploy, &svc, &cm, &hpa)
 
-	controller := Controller{
+	controller := FunctionController{
 		clientset: clientset,
 	}
 	if err := controller.deleteK8sResources("myns", "foo"); err != nil {
@@ -71,7 +71,7 @@ func TestDeleteK8sResources(t *testing.T) {
 
 	// Similar with only svc remaining
 	clientset = fake.NewSimpleClientset(&svc)
-	controller = Controller{
+	controller = FunctionController{
 		clientset: clientset,
 	}
 
@@ -94,7 +94,7 @@ func TestDeleteK8sResources(t *testing.T) {
 	}
 
 	clientset = fake.NewSimpleClientset(&job, &deploy, &svc, &cm)
-	controller = Controller{
+	controller = FunctionController{
 		clientset: clientset,
 	}
 

@@ -217,13 +217,21 @@ local zookeeperHeadlessSvc =
   service.mixin.spec.selector({kubeless: "zookeeper"}) +
   {spec+: {clusterIP: "None"}};
 
-local crd = {
+local crd = [{
   apiVersion: "apiextensions.k8s.io/v1beta1",
   kind: "CustomResourceDefinition",
   metadata: objectMeta.name("functions.kubeless.io"),
   spec: {group: "kubeless.io", version: "v1beta1", scope: "Namespaced", names: {plural: "functions", singular: "function", kind: "Function"}},
   description: "Kubernetes Native Serverless Framework",
-};
+},
+{
+  apiVersion: "apiextensions.k8s.io/v1beta1",
+  kind: "CustomResourceDefinition",
+  metadata: objectMeta.name("triggers.kubeless.io"),
+  spec: {group: "kubeless.io", version: "v1beta1", scope: "Namespaced", names: {plural: "triggers", singular: "trigger", kind: "Trigger"}},
+  description: "Kubernetes Native Serverless Framework",
+}
+];
 
 local kubelessConfig  = configMap.default("kubeless-config", namespace) +
     configMap.data({"ingress-enabled": "false"}) +

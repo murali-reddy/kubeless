@@ -25,3 +25,11 @@ type FunctionListerExpansion interface{}
 // FunctionNamespaceListerExpansion allows custom methods to be added to
 // FunctionNamespaceLister.
 type FunctionNamespaceListerExpansion interface{}
+
+// TriggerListerExpansion allows custom methods to be added to
+// TriggerLister.
+type TriggerListerExpansion interface{}
+
+// TriggerNamespaceListerExpansion allows custom methods to be added to
+// TriggerNamespaceLister.
+type TriggerNamespaceListerExpansion interface{}

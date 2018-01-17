@@ -42,14 +42,19 @@ var rootCmd = &cobra.Command{
 	Short: "Kubeless controller",
 	Long:  globalUsage,
 	Run: func(cmd *cobra.Command, args []string) {
-		kubelessClient, err := utils.GetFunctionClientInCluster()
+		kubelessClient, err := utils.GetClientInCluster()
 		if err != nil {
 			logrus.Fatalf("Cannot get kubeless client: %v", err)
 		}
 
-		cfg := controller.Config{
+		functionCfg := controller.FunctionConfig{
 			KubeCli:        utils.GetClient(),
 			FunctionClient: kubelessClient,
+		}
+
+		triggerCfg := controller.TriggerConfig{
+			KubeCli:       utils.GetClient(),
+			TriggerClient: kubelessClient,
 		}
 
 		restCfg, err := rest.InClusterConfig()
@@ -62,11 +67,14 @@ var rootCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
-		c := controller.New(cfg, smclient)
+		functionController := controller.NewFunctionController(functionCfg, smclient)
+		triggerController := controller.NewTriggerController(triggerCfg, smclient)
+
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
-		go c.Run(stopCh)
+		go functionController.Run(stopCh)
+		go triggerController.Run(stopCh)
 
 		sigterm := make(chan os.Signal, 1)
 		signal.Notify(sigterm, syscall.SIGTERM)

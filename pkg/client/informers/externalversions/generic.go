@@ -55,6 +55,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=kubeless.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("functions"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Kubeless().V1beta1().Functions().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("triggers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Kubeless().V1beta1().Triggers().Informer()}, nil
 
 	}
 

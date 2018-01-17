@@ -13,8 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package v1beta1
 
-type FunctionExpansion interface{}
+package trigger
 
-type TriggerExpansion interface{}
+import (
+	"github.com/spf13/cobra"
+)
+
+//TriggerCmd contains first-class command for trigger
+var TriggerCmd = &cobra.Command{
+	Use:   "trigger SUBCOMMAND",
+	Short: "trigger specific operations",
+	Long:  `trigger command allows user to list, deploy, edit, delete triggers running on Kubeless`,
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
+func init() {
+	TriggerCmd.AddCommand(createCmd)
+	TriggerCmd.AddCommand(deleteCmd)
+	TriggerCmd.AddCommand(listCmd)
+	TriggerCmd.AddCommand(updateCmd)
+}

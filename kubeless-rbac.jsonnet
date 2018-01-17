@@ -23,7 +23,7 @@ local controller_roles = [
   },
   {
     apiGroups: ["kubeless.io"],
-    resources: ["functions"],
+    resources: ["functions", "triggers"],
     verbs: ["get", "list", "watch"],
   },
   {

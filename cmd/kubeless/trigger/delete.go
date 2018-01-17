@@ -13,8 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package v1beta1
 
-type FunctionExpansion interface{}
+package trigger
 
-type TriggerExpansion interface{}
+import (
+	"github.com/spf13/cobra"
+)
+
+var deleteCmd = &cobra.Command{
+	Use:   "delete <function_name>",
+	Short: "delete a trigger from Kubeless",
+	Long:  `delete a trigger from Kubeless`,
+	Run: func(cmd *cobra.Command, args []string) {
+
+	},
+}
+
+func init() {
+	deleteCmd.Flags().StringP("namespace", "", "", "Specify namespace for the function")
+}

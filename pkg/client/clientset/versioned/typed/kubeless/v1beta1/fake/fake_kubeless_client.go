@@ -29,6 +29,10 @@ func (c *FakeKubelessV1beta1) Functions(namespace string) v1beta1.FunctionInterf
 	return &FakeFunctions{c, namespace}
 }
 
+func (c *FakeKubelessV1beta1) Triggers(namespace string) v1beta1.TriggerInterface {
+	return &FakeTriggers{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeKubelessV1beta1) RESTClient() rest.Interface {
