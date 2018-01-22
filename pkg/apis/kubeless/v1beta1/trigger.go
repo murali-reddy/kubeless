@@ -28,15 +28,16 @@ import (
 type Trigger struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Spec              FunctionSpec `json:"spec"`
+	Spec              TriggerSpec `json:"spec"`
 }
 
 // TriggerSpec contains func specification
 type TriggerSpec struct {
-	Type        string         `json:"type"`     // Function trigger type
-	Topic       string         `json:"topic"`    // Function topic trigger (for PubSub type)
-	Schedule    string         `json:"schedule"` // Function scheduled time (for Schedule type)
-	ServiceSpec v1.ServiceSpec `json:"service"`
+	Type         string         `json:"type"`          // Trigger type
+	Topic        string         `json:"topic"`         // Trigger topic (for PubSub type)
+	Schedule     string         `json:"schedule"`      // Scheduled time (for Schedule type)
+	FunctionName string         `json:"function-name"` // Name of the associated function
+	ServiceSpec  v1.ServiceSpec `json:"service"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

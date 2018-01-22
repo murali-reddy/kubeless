@@ -148,12 +148,7 @@ func GetDefaultNamespace() string {
 }
 
 // GetFunction returns specification of a function
-func GetFunction(funcName, ns string) (kubelessApi.Function, error) {
-	kubelessClient, err := GetKubelessClientOutCluster()
-	if err != nil {
-		return kubelessApi.Function{}, err
-	}
-
+func GetFunction(kubelessClient versioned.Interface, funcName, ns string) (kubelessApi.Function, error) {
 	f, err := kubelessClient.KubelessV1beta1().Functions(ns).Get(funcName, metav1.GetOptions{})
 
 	if err != nil {
@@ -327,17 +322,17 @@ func getProvisionContainer(function, checksum, fileName, handler, contentType, r
 }
 
 // CreateIngress creates ingress rule for a specific function
-func CreateIngress(client kubernetes.Interface, funcObj *kubelessApi.Function, ingressName, hostname, ns string, enableTLSAcme bool) error {
-	or, err := GetOwnerReference(funcObj)
+func CreateIngress(client kubernetes.Interface, triggerObj *kubelessApi.Trigger, ingressName, hostname, ns string, enableTLSAcme bool) error {
+	or, err := GetOwnerReference(triggerObj)
 	if err != nil {
 		return err
 	}
 
-	if len(funcObj.Spec.ServiceSpec.Ports) == 0 {
+	if len(triggerObj.Spec.ServiceSpec.Ports) == 0 {
 		return fmt.Errorf("can't create route due to service port isn't defined")
 	}
 
-	port := funcObj.Spec.ServiceSpec.Ports[0].TargetPort
+	port := triggerObj.Spec.ServiceSpec.Ports[0].TargetPort
 	if port.IntVal <= 0 || port.IntVal > 65535 {
 		return fmt.Errorf("Invalid port number %d specified", port.IntVal)
 	}
@@ -347,7 +342,7 @@ func CreateIngress(client kubernetes.Interface, funcObj *kubelessApi.Function, i
 			Name:            ingressName,
 			Namespace:       ns,
 			OwnerReferences: or,
-			Labels:          funcObj.ObjectMeta.Labels,
+			Labels:          triggerObj.ObjectMeta.Labels,
 		},
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
@@ -359,8 +354,8 @@ func CreateIngress(client kubernetes.Interface, funcObj *kubelessApi.Function, i
 								{
 									Path: "/",
 									Backend: v1beta1.IngressBackend{
-										ServiceName: funcObj.ObjectMeta.Name,
-										ServicePort: funcObj.Spec.ServiceSpec.Ports[0].TargetPort,
+										ServiceName: triggerObj.ObjectMeta.Name,
+										ServicePort: triggerObj.Spec.ServiceSpec.Ports[0].TargetPort,
 									},
 								},
 							},
@@ -950,21 +945,21 @@ func CreateServiceMonitor(smclient monitoringv1alpha1.MonitoringV1alpha1Client, 
 }
 
 // GetOwnerReference returns ownerRef for appending to objects's metadata
-// created by kubeless-controller one a function is deployed.
-func GetOwnerReference(funcObj *kubelessApi.Function) ([]metav1.OwnerReference, error) {
-	if funcObj.ObjectMeta.Name == "" {
-		return []metav1.OwnerReference{}, fmt.Errorf("function name can't be empty")
+// created by kubeless-controller onec a trigger is deployed.
+func GetOwnerReference(triggerObj *kubelessApi.Trigger) ([]metav1.OwnerReference, error) {
+	if triggerObj.ObjectMeta.Name == "" {
+		return []metav1.OwnerReference{}, fmt.Errorf("Trigger name can't be empty")
 	}
-	if funcObj.ObjectMeta.UID == "" {
-		return []metav1.OwnerReference{}, fmt.Errorf("uid of function %s can't be empty", funcObj.ObjectMeta.Name)
+	if triggerObj.ObjectMeta.UID == "" {
+		return []metav1.OwnerReference{}, fmt.Errorf("uid of trigger %s can't be empty", triggerObj.ObjectMeta.Name)
 	}
 	t := true
 	return []metav1.OwnerReference{
 		{
-			Kind:               "Function",
-			APIVersion:         "k8s.io",
-			Name:               funcObj.ObjectMeta.Name,
-			UID:                funcObj.ObjectMeta.UID,
+			Kind:               "Trigger",
+			APIVersion:         "kubeless.io",
+			Name:               triggerObj.ObjectMeta.Name,
+			UID:                triggerObj.ObjectMeta.UID,
 			BlockOwnerDeletion: &t,
 		},
 	}, nil

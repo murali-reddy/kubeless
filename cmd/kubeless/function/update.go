@@ -141,9 +141,14 @@ var updateCmd = &cobra.Command{
 			}
 		})
 
-		previousFunction, err := utils.GetFunction(funcName, ns)
+		kubelessClient, err := utils.GetKubelessClientOutCluster()
 		if err != nil {
 			logrus.Fatal(err)
+		}
+
+		previousFunction, err := utils.GetFunction(kubelessClient, funcName, ns)
+		if err != nil {
+			logrus.Fatalf("Can not out-of-cluster client: %v", err)
 		}
 
 		if port != nil && (*port <= 0 || *port > 65535) {
@@ -155,10 +160,6 @@ var updateCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
-		kubelessClient, err := utils.GetKubelessClientOutCluster()
-		if err != nil {
-			logrus.Fatal(err)
-		}
 		logrus.Infof("Redeploying function...")
 		err = utils.UpdateFunctionResource(kubelessClient, f)
 		if err != nil {

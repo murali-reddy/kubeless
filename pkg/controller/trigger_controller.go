@@ -98,12 +98,12 @@ func NewTriggerController(cfg TriggerConfig, smclient *monitoringv1alpha1.Monito
 	}
 }
 
-// Run starts the kubeless controller
+// Run starts the Trigger controller
 func (c *TriggerController) Run(stopCh <-chan struct{}) {
 	defer utilruntime.HandleCrash()
 	defer c.queue.ShutDown()
 
-	c.logger.Info("Starting kubeless controller")
+	c.logger.Info("Starting Trigger controller")
 
 	go c.informer.Run(stopCh)
 
@@ -112,7 +112,7 @@ func (c *TriggerController) Run(stopCh <-chan struct{}) {
 		return
 	}
 
-	c.logger.Info("Kubeless controller synced and ready")
+	c.logger.Info("Trigger controller synced and ready")
 
 	// run one round of GC at startup to detect orphaned objects from the last time
 	c.garbageCollect()
@@ -160,34 +160,56 @@ func (c *TriggerController) processNextItem() bool {
 	return true
 }
 
-func (c *TriggerController) getResouceGroupVersion(target string) (string, error) {
-	resources, err := c.clientset.Discovery().ServerResources()
+func (c *TriggerController) processItem(key string) error {
+	c.logger.Infof("Processing change to Trigger %s", key)
+
+	ns, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		return "", err
+		return err
 	}
-	groupVersion := ""
-	for _, resource := range resources {
-		for _, apiResource := range resource.APIResources {
-			if apiResource.Name == target {
-				groupVersion = resource.GroupVersion
-				break
-			}
+
+	c.logger.Infof("Processing update to Trigger: %s Namespace: %s", name, ns)
+
+	obj, exists, err := c.informer.GetIndexer().GetByKey(key)
+	if err != nil {
+		return fmt.Errorf("Error fetching object with key %s from store: %v", key, err)
+	}
+
+	if !exists {
+		err := c.deleteK8sResources(ns, name)
+		if err != nil {
+			c.logger.Errorf("Can't delete function: %v", err)
+			return err
 		}
+		c.logger.Infof("Deleted Function %s", key)
+		return nil
 	}
-	if groupVersion == "" {
-		return "", fmt.Errorf("Resource %s not found in any group", target)
+
+	triggerObj := obj.(*kubelessApi.Trigger)
+
+	funcObj, err := utils.GetFunction(c.kubelessclient, triggerObj.Spec.FunctionName, ns)
+	if err != nil {
+		logrus.Fatalf("Unable to find the function %s in the namespace %s. Received %s: ", triggerObj.Spec.FunctionName, ns, err)
 	}
-	return groupVersion, nil
+
+	err = c.ensureTriggerResources(triggerObj, &funcObj)
+	if err != nil {
+		c.logger.Errorf("Function can not be created/updated: %v", err)
+		return err
+	}
+
+	c.logger.Infof("Processed change to Trigger: %s Namespace: %s", triggerObj.ObjectMeta.Name, ns)
+	return nil
 }
 
 // ensureK8sResources creates/updates k8s objects (deploy, svc, configmap) for the function
-func (c *TriggerController) ensureK8sResources(funcObj *kubelessApi.Function) error {
+func (c *TriggerController) ensureTriggerResources(triggerObj  *kubelessApi.Trigger, funcObj *kubelessApi.Function) error {
 	if len(funcObj.ObjectMeta.Labels) == 0 {
 		funcObj.ObjectMeta.Labels = make(map[string]string)
 	}
 	funcObj.ObjectMeta.Labels["function"] = funcObj.ObjectMeta.Name
 
-	or, err := utils.GetOwnerReference(funcObj)
+	or, err := utils.GetOwnerReference(triggerObj)
 	if err != nil {
 		return err
 	}
@@ -242,6 +264,26 @@ func (c *TriggerController) ensureK8sResources(funcObj *kubelessApi.Function) er
 	return nil
 }
 
+func (c *TriggerController) getResouceGroupVersion(target string) (string, error) {
+	resources, err := c.clientset.Discovery().ServerResources()
+	if err != nil {
+		return "", err
+	}
+	groupVersion := ""
+	for _, resource := range resources {
+		for _, apiResource := range resource.APIResources {
+			if apiResource.Name == target {
+				groupVersion = resource.GroupVersion
+				break
+			}
+		}
+	}
+	if groupVersion == "" {
+		return "", fmt.Errorf("Resource %s not found in any group", target)
+	}
+	return groupVersion, nil
+}
+
 func (c *TriggerController) deleteAutoscale(ns, name string) error {
 	if c.smclient != nil {
 		// Delete Service monitor if the client is available
@@ -293,41 +335,6 @@ func (c *TriggerController) deleteK8sResources(ns, name string) error {
 		return err
 	}
 
-	return nil
-}
-
-func (c *TriggerController) processItem(key string) error {
-	c.logger.Infof("Processing change to Function %s", key)
-
-	ns, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		return err
-	}
-
-	obj, exists, err := c.informer.GetIndexer().GetByKey(key)
-	if err != nil {
-		return fmt.Errorf("Error fetching object with key %s from store: %v", key, err)
-	}
-
-	if !exists {
-		err := c.deleteK8sResources(ns, name)
-		if err != nil {
-			c.logger.Errorf("Can't delete function: %v", err)
-			return err
-		}
-		c.logger.Infof("Deleted Function %s", key)
-		return nil
-	}
-
-	funcObj := obj.(*kubelessApi.Function)
-
-	err = c.ensureK8sResources(funcObj)
-	if err != nil {
-		c.logger.Errorf("Function can not be created/updated: %v", err)
-		return err
-	}
-
-	c.logger.Infof("Updated Function %s", key)
 	return nil
 }
 

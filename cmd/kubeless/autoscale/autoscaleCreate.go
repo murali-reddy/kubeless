@@ -24,7 +24,12 @@ var autoscaleCreateCmd = &cobra.Command{
 			ns = utils.GetDefaultNamespace()
 		}
 
-		function, err := utils.GetFunction(funcName, ns)
+		kubelessClient, err := utils.GetKubelessClientOutCluster()
+		if err != nil {
+			logrus.Fatalf("Can not out-of-cluster client: %v", err)
+		}
+
+		function, err := utils.GetFunction(kubelessClient, funcName, ns)
 		if err != nil {
 			logrus.Fatalf("Unable to find the function %s. Received %s: ", funcName, err)
 		}
@@ -61,10 +66,6 @@ var autoscaleCreateCmd = &cobra.Command{
 		}
 		function.Spec.HorizontalPodAutoscaler = hpa
 
-		kubelessClient, err := utils.GetKubelessClientOutCluster()
-		if err != nil {
-			logrus.Fatal(err)
-		}
 		logrus.Infof("Adding autoscaling rule to the function...")
 		err = utils.UpdateFunctionResource(kubelessClient, &function)
 		if err != nil {

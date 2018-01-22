@@ -52,7 +52,12 @@ var describeCmd = &cobra.Command{
 			logrus.Fatalf("Can not describe function: %v", err)
 		}
 
-		f, err := utils.GetFunction(funcName, ns)
+		kubelessClient, err := utils.GetKubelessClientOutCluster()
+		if err != nil {
+			logrus.Fatalf("Can not out-of-cluster client: %v", err)
+		}
+
+		f, err := utils.GetFunction(kubelessClient, funcName, ns)
 		if err != nil {
 			logrus.Fatalf("Can not describe function: %v", err)
 		}

@@ -64,6 +64,20 @@ var createCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
+		functionName, err := cmd.Flags().GetString("function-name")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		kubelessClient, err := utils.GetKubelessClientOutCluster()
+		if err != nil {
+			logrus.Fatalf("Can not out-of-cluster client: %v", err)
+		}
+		_, err = utils.GetFunction(kubelessClient, functionName, ns)
+		if err != nil {
+			logrus.Fatalf("Unable to find the function %s in the namespace %s. Received %s: ", functionName, ns, err)
+		}
+
 		trigger := kubelessApi.Trigger{}
 		trigger.TypeMeta = metav1.TypeMeta{
 			Kind:       "Trigger",
@@ -88,17 +102,13 @@ var createCmd = &cobra.Command{
 			break
 		}
 
+		trigger.Spec.FunctionName = functionName
 		trigger.ObjectMeta = metav1.ObjectMeta{
 			Name:      triggerName,
 			Namespace: ns,
 			Labels: map[string]string{
 				"created-by": "kubeless",
 			},
-		}
-
-		kubelessClient, err := utils.GetKubelessClientOutCluster()
-		if err != nil {
-			logrus.Fatal(err)
 		}
 
 		logrus.Infof("Deploying trigger...")
@@ -116,4 +126,6 @@ func init() {
 	createCmd.Flags().StringP("trigger-topic", "", "", "Deploy a pubsub function to Kubeless")
 	createCmd.Flags().StringP("schedule", "", "", "Specify schedule in cron format for scheduled function")
 	createCmd.Flags().Bool("trigger-http", false, "Deploy a http-based function to Kubeless")
+	createCmd.Flags().StringP("function-name", "", "", "Name of the function to be associated with trigger")
+	createCmd.MarkFlagRequired("function-name")
 }
