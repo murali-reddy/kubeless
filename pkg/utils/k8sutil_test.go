@@ -705,13 +705,13 @@ func doesNotContain(envs []v1.EnvVar, env v1.EnvVar) bool {
 
 func TestCreateIngressResource(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	f1 := &kubelessApi.Function{
+	f1 := &kubelessApi.Trigger{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "myns",
 			UID:       "1234",
 		},
-		Spec: kubelessApi.FunctionSpec{
+		Spec: kubelessApi.TriggerSpec{
 			ServiceSpec: v1.ServiceSpec{
 				Ports: []v1.ServicePort{
 					{
@@ -737,13 +737,13 @@ func TestCreateIngressResource(t *testing.T) {
 
 func TestCreateIngressResourceWithTLSAcme(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
-	f1 := &kubelessApi.Function{
+	f1 := &kubelessApi.Trigger{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "myns",
 			UID:       "1234",
 		},
-		Spec: kubelessApi.FunctionSpec{
+		Spec: kubelessApi.TriggerSpec{
 			ServiceSpec: v1.ServiceSpec{
 				Ports: []v1.ServicePort{
 					{
