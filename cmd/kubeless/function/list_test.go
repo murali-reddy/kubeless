@@ -18,7 +18,6 @@ package function
 
 import (
 	"bytes"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -162,28 +161,6 @@ func TestList(t *testing.T) {
 
 	if !strings.Contains(output, "foo") || !strings.Contains(output, "bar") {
 		t.Errorf("table output didn't mention both functions")
-	}
-	// Status
-	m, err := regexp.MatchString("foo.*1/1 READY", output)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !m {
-		t.Errorf("table output didn't mention deployment status")
-	}
-	m, err = regexp.MatchString("bar.*0/2 NOT READY", output)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !m {
-		t.Errorf("table output didn't mention deployment status")
-	}
-	m, err = regexp.MatchString("wrong.*MISSING", output)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !m {
-		t.Errorf("table output didn't mention deployment status")
 	}
 
 	// Explicit arg(s)

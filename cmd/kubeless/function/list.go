@@ -27,7 +27,6 @@ import (
 	"github.com/gosuri/uitable"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -122,7 +121,7 @@ func printFunctions(w io.Writer, functions []*kubelessApi.Function, cli kubernet
 		table := uitable.New()
 		table.MaxColWidth = 50
 		table.Wrap = true
-		table.AddRow("NAME", "NAMESPACE", "HANDLER", "RUNTIME", "TYPE", "TOPIC", "DEPENDENCIES", "STATUS")
+		table.AddRow("NAME", "NAMESPACE", "HANDLER", "RUNTIME", "TYPE", "TOPIC", "DEPENDENCIES")
 		for _, f := range functions {
 			n := f.ObjectMeta.Name
 			h := f.Spec.Handler
@@ -130,24 +129,18 @@ func printFunctions(w io.Writer, functions []*kubelessApi.Function, cli kubernet
 			t := f.Spec.Type
 			tp := f.Spec.Topic
 			ns := f.ObjectMeta.Namespace
-			status, err := getDeploymentStatus(cli, f.ObjectMeta.Name, f.ObjectMeta.Namespace)
-			if err != nil && k8sErrors.IsNotFound(err) {
-				status = "MISSING: Check controller logs"
-			} else if err != nil {
-				return err
-			}
 			deps, err := parseDeps(f.Spec.Deps, r)
 			if err != nil {
 				return err
 			}
-			table.AddRow(n, ns, h, r, t, tp, deps, status)
+			table.AddRow(n, ns, h, r, t, tp, deps)
 		}
 		fmt.Fprintln(w, table)
 	} else if output == "wide" {
 		table := uitable.New()
 		table.MaxColWidth = 50
 		table.Wrap = true
-		table.AddRow("NAME", "NAMESPACE", "HANDLER", "RUNTIME", "TYPE", "TOPIC", "DEPENDENCIES", "STATUS", "MEMORY", "ENV", "LABEL", "SCHEDULE")
+		table.AddRow("NAME", "NAMESPACE", "HANDLER", "RUNTIME", "TYPE", "TOPIC", "DEPENDENCIES", "MEMORY", "ENV", "LABEL", "SCHEDULE")
 		for _, f := range functions {
 			n := f.ObjectMeta.Name
 			h := f.Spec.Handler
@@ -160,12 +153,6 @@ func printFunctions(w io.Writer, functions []*kubelessApi.Function, cli kubernet
 			}
 			s := f.Spec.Schedule
 			ns := f.ObjectMeta.Namespace
-			status, err := getDeploymentStatus(cli, f.ObjectMeta.Name, f.ObjectMeta.Namespace)
-			if err != nil && k8sErrors.IsNotFound(err) {
-				status = "MISSING: Check controller logs"
-			} else if err != nil {
-				return err
-			}
 			mem := ""
 			env := ""
 			if len(f.Spec.Template.Spec.Containers[0].Resources.Requests) != 0 {
@@ -186,7 +173,7 @@ func printFunctions(w io.Writer, functions []*kubelessApi.Function, cli kubernet
 				}
 				label = buffer.String()
 			}
-			table.AddRow(n, ns, h, r, t, tp, deps, status, mem, env, label, s)
+			table.AddRow(n, ns, h, r, t, tp, deps, mem, env, label, s)
 		}
 		fmt.Fprintln(w, table)
 	} else {
