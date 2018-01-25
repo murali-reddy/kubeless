@@ -140,6 +140,11 @@ kubeless_function_delete() {
     echo_info "Deleting function "${func}" in case still present ... "
     kubeless function ls |grep -w "${func}" && kubeless function delete "${func}" >& /dev/null || true
 }
+kubeless_trigger_delete() {
+    local trigger=${1:?}; shift
+    echo_info "Deleting trigger "${trigger}" in case still present ... "
+    kubeless trigger ls |grep -w "${trigger}" && kubeless trigger delete "${trigger}" >& /dev/null || true
+}
 kubeless_function_deploy() {
     local func=${1:?}; shift
     echo_info "Deploying function ..."
@@ -248,6 +253,14 @@ deploy_function() {
     kubeless_function_delete ${func}
     make -sC examples ${func}
 }
+
+deploy_trigger() {
+    local trigger=${1:?} trigger_topic
+    echo_info "TEST: $trigger"
+    kubeless_trigger_delete ${trigger}
+    make -sC examples ${func}
+}
+
 verify_function() {
     local func=${1:?}
     local make_task=${2:-${func}-verify}
@@ -288,7 +301,7 @@ test_kubeless_function_update() {
 test_kubeless_ingress() {
     local func=${1:?} domain=example.com act_ingress exp_ingress
     echo_info "TEST: ingress ${func}"
-    kubeless route create ing-${func} --function ${func} --hostname ${func}.${domain}
+    kubeless route create ing-${func} --trigger ${func} --hostname ${func}.${domain}
     kubeless route list | fgrep -w ing-${func}
     act_ingress=$(kubectl get ingress ing-${func} -ojsonpath='{range .spec.rules[*]}{@.host}:{@.http.paths[*].backend.serviceName}')
     exp_ingress="${func}.${domain}:${func}"

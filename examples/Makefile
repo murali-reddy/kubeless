@@ -1,5 +1,6 @@
 get-python:
 	kubeless function deploy get-python --trigger-http --runtime python2.7 --handler helloget.foo --from-file python/helloget.py
+	kubeless trigger create --function-name get-python get-python
 	echo "curl localhost:8080/api/v1/proxy/namespaces/default/services/get-python/"
 
 get-python-verify:
@@ -10,6 +11,7 @@ get-python-update:
 	printf 'def foo():\n%4sreturn "hello world updated"\n' > $(TMPDIR)/hello-updated.py
 	kubeless function update get-python --from-file $(TMPDIR)/hello-updated.py
 	rm -rf $(TMPDIR)
+	kubeless trigger update --function-name get-python get-python
 	echo "curl localhost:8080/api/v1/proxy/namespaces/default/services/get-python/"
 
 get-python-update-verify:
@@ -17,12 +19,14 @@ get-python-update-verify:
 
 get-python-deps:
 	kubeless function deploy get-python-deps --trigger-http --runtime python2.7 --handler helloget.foo --from-file python/hellowithdeps.py --dependencies python/requirements.txt
+	kubeless trigger create --function-name get-python-deps get-python-deps
 
 get-python-deps-verify:
 	kubeless function call get-python-deps |egrep Google
 
 get-python-custom-port:
-	kubeless function deploy get-python-custom-port --trigger-http --runtime python2.7 --handler helloget.foo --from-file python/helloget.py --port 8081
+	kubeless function deploy get-python-custom-port --trigger-http --runtime python2.7 --handler helloget.foo --from-file python/helloget.py
+	kubeless trigger create --function-name get-python-custom-port get-python-custom-port --trigger-http  --port 8081
 
 get-python-custom-port-verify:
 	kubeless function call get-python-custom-port |egrep hello.world
@@ -32,6 +36,7 @@ get-python-deps-update:
 	printf 'bs4\ntwitter\n' > $(TMPDIR)/requirements.txt
 	kubeless function update get-python-deps --dependencies $(TMPDIR)/requirements.txt
 	rm -rf $(TMPDIR)
+	kubeless trigger update --function-name get-python-deps get-python-deps
 
 get-python-deps-update-verify:
 	$(eval pod := $(shell kubectl get pod -l function=get-python-deps -o go-template -o custom-columns=:metadata.name --no-headers=true))
@@ -53,7 +58,7 @@ get-python-36-verify:
 
 scheduled-get-python:
 	kubeless function deploy scheduled-get-python --schedule "* * * * *" --runtime python2.7 --handler helloget.foo --from-file python/helloget.py
-
+	kubeless trigger create scheduled-get-python --function-name  scheduled-get-python --schedule "* * * * *"
 scheduled-get-python-verify:
 	number="1"; \
 	timeout="70"; \
@@ -82,13 +87,15 @@ timeout-python-verify:
 
 get-nodejs:
 	kubeless function deploy get-nodejs --trigger-http --runtime nodejs6 --handler helloget.foo --from-file nodejs/helloget.js
+	kubeless trigger create get-nodejs --function-name get-nodejs --trigger-http
 	echo "curl localhost:8080/api/v1/proxy/namespaces/default/services/get-nodejs/"
 
 get-nodejs-verify:
 	kubeless function call get-nodejs |egrep hello.world
 
 get-nodejs-custom-port:
-	kubeless function deploy get-nodejs-custom-port --trigger-http --runtime nodejs6 --handler helloget.foo --from-file nodejs/helloget.js --port 8083
+	kubeless function deploy get-nodejs-custom-port --trigger-http --runtime nodejs6 --handler helloget.foo --from-file nodejs/helloget.js
+	kubeless trigger create get-nodejs-custom-port --function-name get-nodejs-custom-port --port 8083
 	echo "curl localhost:8083/api/v1/proxy/namespaces/default/services/get-nodejs-custom-port/"
 
 get-nodejs-custom-port-verify:
@@ -106,6 +113,7 @@ timeout-nodejs-verify:
 
 get-nodejs-deps:
 	kubeless function deploy get-nodejs-deps --trigger-http --runtime nodejs6 --handler helloget.handler --from-file nodejs/hellowithdeps.js --dependencies nodejs/package.json
+	kubeless trigger create get-nodejs-deps --function-name get-nodejs-deps
 
 get-nodejs-deps-verify:
 	kubeless function call get-nodejs-deps --data '{"hello": "world"}' | grep -q '"hello":"world","date"'
@@ -140,7 +148,8 @@ get-ruby-deps-verify:
 	kubeless function call get-ruby-deps |egrep hello.world
 
 get-ruby-custom-port:
-	kubeless function deploy get-ruby-custom-port --trigger-http --runtime ruby2.4 --handler helloget.foo --from-file ruby/helloget.rb --port 8082
+	kubeless function deploy get-ruby-custom-port --trigger-http --runtime ruby2.4 --handler helloget.foo --from-file ruby/helloget.rb
+	kubeless trigger create get-ruby-custom-port --function-name get-nodejs-custom-port --port 8082
 	echo "curl localhost:8082/api/v1/proxy/namespaces/default/services/get-ruby-custom-port/"
 
 get-ruby-custom-port-verify:
@@ -186,7 +195,8 @@ post-python-verify:
 	kubeless function call post-python --data '{"it-s": "alive"}'|egrep "it.*alive"
 
 post-python-custom-port:
-	kubeless function deploy post-python-custom-port --trigger-http --runtime python2.7 --handler hellowithdata.handler --from-file python/hellowithdata.py --port 8081
+	kubeless function deploy post-python-custom-port --runtime python2.7 --handler hellowithdata.handler --from-file python/hellowithdata.py
+	kubeless trigger create post-python-custom-port --function-name post-python-custom-port --port 8081 --trigger-http
 	echo "curl --data '{\"hello\":\"world\"}' localhost:8081/api/v1/proxy/namespaces/default/services/post-python-custom-port/ --header \"Content-Type:application/json\""
 
 post-python-custom-port-verify:

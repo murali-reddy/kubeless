@@ -189,7 +189,8 @@ func (c *TriggerController) processItem(key string) error {
 
 	funcObj, err := utils.GetFunction(c.kubelessclient, triggerObj.Spec.FunctionName, ns)
 	if err != nil {
-		logrus.Fatalf("Unable to find the function %s in the namespace %s. Received %s: ", triggerObj.Spec.FunctionName, ns, err)
+		c.logger.Errorf("Unable to find the function %s in the namespace %s. Received %s: ", triggerObj.Spec.FunctionName, ns, err)
+		return err
 	}
 
 	err = c.ensureTriggerResources(triggerObj, &funcObj)
