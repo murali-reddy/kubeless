@@ -18,6 +18,8 @@ package trigger
 
 import (
 	kubelessApi "github.com/kubeless/kubeless/pkg/apis/kubeless/v1beta1"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"github.com/kubeless/kubeless/pkg/utils"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -69,13 +71,47 @@ var createCmd = &cobra.Command{
 			logrus.Fatal(err)
 		}
 
+		headless, err := cmd.Flags().GetBool("headless")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		port, err := cmd.Flags().GetInt32("port")
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		if port <= 0 || port > 65535 {
+			logrus.Fatalf("Invalid port number %d specified", port)
+		}
+
 		kubelessClient, err := utils.GetKubelessClientOutCluster()
 		if err != nil {
 			logrus.Fatalf("Can not create out-of-cluster client: %v", err)
 		}
-		_, err = utils.GetFunction(kubelessClient, functionName, ns)
+		funcObj, err := utils.GetFunction(kubelessClient, functionName, ns)
 		if err != nil {
 			logrus.Fatalf("Unable to find the function %s in the namespace %s. Received %s: ", functionName, ns, err)
+		}
+
+		svcSpec := v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{
+					Name:     "http-function-port",
+					NodePort: 0,
+					Protocol: v1.ProtocolTCP,
+				},
+			},
+			Selector: funcObj.ObjectMeta.Labels,
+			Type:     v1.ServiceTypeClusterIP,
+		}
+
+		if headless {
+			svcSpec.ClusterIP = v1.ClusterIPNone
+		}
+
+		if port != 0 {
+			svcSpec.Ports[0].Port = port
+			svcSpec.Ports[0].TargetPort = intstr.FromInt(int(port))
 		}
 
 		trigger := kubelessApi.Trigger{}
@@ -101,7 +137,7 @@ var createCmd = &cobra.Command{
 			trigger.Spec.Schedule = ""
 			break
 		}
-
+		trigger.Spec.ServiceSpec = svcSpec
 		trigger.Spec.FunctionName = functionName
 		trigger.ObjectMeta = metav1.ObjectMeta{
 			Name:      triggerName,
@@ -127,5 +163,7 @@ func init() {
 	createCmd.Flags().StringP("schedule", "", "", "Specify schedule in cron format for scheduled function")
 	createCmd.Flags().Bool("trigger-http", false, "Deploy a http-based function to Kubeless")
 	createCmd.Flags().StringP("function-name", "", "", "Name of the function to be associated with trigger")
+	createCmd.Flags().Bool("headless", false, "Deploy http-based function without a single service IP and load balancing support from Kubernetes. See: https://kubernetes.io/docs/concepts/services-networking/service/#headless-services")
+	createCmd.Flags().Int32("port", 8080, "Deploy http-based function with a custom port")
 	createCmd.MarkFlagRequired("function-name")
 }

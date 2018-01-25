@@ -219,12 +219,12 @@ func (c *TriggerController) ensureTriggerResources(triggerObj *kubelessApi.Trigg
 		return err
 	}
 
-	err = utils.EnsureFuncService(c.clientset, funcObj, or)
+	err = utils.EnsureFuncService(c.clientset, triggerObj, or)
 	if err != nil {
 		return err
 	}
 
-	err = utils.EnsureFuncDeployment(c.clientset, funcObj, or)
+	err = utils.EnsureFuncDeployment(c.clientset, triggerObj, funcObj, or)
 	if err != nil {
 		return err
 	}

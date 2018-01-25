@@ -34,7 +34,6 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -131,7 +130,7 @@ func getContentType(filename string, fbytes []byte) string {
 	return contentType
 }
 
-func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, file, deps, runtime, topic, schedule, runtimeImage, mem, timeout string, triggerHTTP bool, headlessFlag *bool, portFlag *int32, envs, labels []string, defaultFunction kubelessApi.Function) (*kubelessApi.Function, error) {
+func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, file, deps, runtime, topic, schedule, runtimeImage, mem, timeout string, triggerHTTP bool, envs, labels []string, defaultFunction kubelessApi.Function) (*kubelessApi.Function, error) {
 	function := defaultFunction
 	function.TypeMeta = metav1.TypeMeta{
 		Kind:       "Function",
@@ -248,41 +247,6 @@ func getFunctionDescription(cli kubernetes.Interface, funcName, ns, handler, fil
 			Image:     runtimeImage,
 		},
 	}
-
-	selectorLabels := map[string]string{}
-	for k, v := range funcLabels {
-		selectorLabels[k] = v
-	}
-	selectorLabels["function"] = funcName
-
-	svcSpec := v1.ServiceSpec{
-		Ports: []v1.ServicePort{
-			{
-				Name:     "http-function-port",
-				NodePort: 0,
-				Protocol: v1.ProtocolTCP,
-			},
-		},
-		Selector: selectorLabels,
-		Type:     v1.ServiceTypeClusterIP,
-	}
-
-	if headlessFlag != nil {
-		if *headlessFlag == true {
-			svcSpec.ClusterIP = v1.ClusterIPNone
-		}
-	} else {
-		svcSpec.ClusterIP = defaultFunction.Spec.ServiceSpec.ClusterIP
-	}
-
-	if portFlag != nil {
-		svcSpec.Ports[0].Port = *portFlag
-		svcSpec.Ports[0].TargetPort = intstr.FromInt(int(*portFlag))
-	} else {
-		svcSpec.Ports[0].Port = defaultFunction.Spec.ServiceSpec.Ports[0].Port
-		svcSpec.Ports[0].TargetPort = defaultFunction.Spec.ServiceSpec.Ports[0].TargetPort
-	}
-	function.Spec.ServiceSpec = svcSpec
 
 	return &function, nil
 }

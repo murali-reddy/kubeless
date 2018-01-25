@@ -485,11 +485,9 @@ func EnsureFuncConfigMap(client kubernetes.Interface, funcObj *kubelessApi.Funct
 	return err
 }
 
-// this function resolves backward incompatibility in case user uses old client which doesn't include serviceSpec into funcSpec.
-// if serviceSpec is empty, we will use the default serviceSpec whose port is 8080
-func serviceSpec(funcObj *kubelessApi.Function) v1.ServiceSpec {
-	if len(funcObj.Spec.ServiceSpec.Ports) != 0 && len(funcObj.Spec.ServiceSpec.Selector) != 0 {
-		return funcObj.Spec.ServiceSpec
+func serviceSpec(triggerObj *kubelessApi.Trigger) v1.ServiceSpec {
+	if len(triggerObj.Spec.ServiceSpec.Ports) != 0 && len(triggerObj.Spec.ServiceSpec.Selector) != 0 {
+		return triggerObj.Spec.ServiceSpec
 	}
 
 	return v1.ServiceSpec{
@@ -502,36 +500,36 @@ func serviceSpec(funcObj *kubelessApi.Function) v1.ServiceSpec {
 				TargetPort: intstr.FromInt(8080),
 			},
 		},
-		Selector: funcObj.ObjectMeta.Labels,
+		Selector: triggerObj.ObjectMeta.Labels,
 		Type:     v1.ServiceTypeClusterIP,
 	}
 }
 
-// EnsureFuncService creates/updates a function service
-func EnsureFuncService(client kubernetes.Interface, funcObj *kubelessApi.Function, or []metav1.OwnerReference) error {
+// EnsureFuncService creates/updates a http trigger service
+func EnsureFuncService(client kubernetes.Interface, triggerObj *kubelessApi.Trigger, or []metav1.OwnerReference) error {
 	svc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            funcObj.ObjectMeta.Name,
-			Labels:          funcObj.ObjectMeta.Labels,
+			Name:            triggerObj.ObjectMeta.Name,
+			Labels:          triggerObj.ObjectMeta.Labels,
 			OwnerReferences: or,
 		},
-		Spec: serviceSpec(funcObj),
+		Spec: serviceSpec(triggerObj),
 	}
 
-	_, err := client.Core().Services(funcObj.ObjectMeta.Namespace).Create(svc)
+	_, err := client.Core().Services(triggerObj.ObjectMeta.Namespace).Create(svc)
 	if err != nil && k8sErrors.IsAlreadyExists(err) {
 		// In case the SVC already exists we should update
 		// just certain fields (to avoid race conditions)
 		var newSvc *v1.Service
-		newSvc, err = client.Core().Services(funcObj.ObjectMeta.Namespace).Get(funcObj.ObjectMeta.Name, metav1.GetOptions{})
+		newSvc, err = client.Core().Services(triggerObj.ObjectMeta.Namespace).Get(triggerObj.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
-		newSvc.ObjectMeta.Labels = funcObj.ObjectMeta.Labels
+		newSvc.ObjectMeta.Labels = triggerObj.ObjectMeta.Labels
 		newSvc.ObjectMeta.OwnerReferences = or
 		newSvc.Spec.Ports = svc.Spec.Ports
 		newSvc.Spec.Selector = svc.Spec.Selector
-		_, err = client.Core().Services(funcObj.ObjectMeta.Namespace).Update(newSvc)
+		_, err = client.Core().Services(triggerObj.ObjectMeta.Namespace).Update(newSvc)
 		if err != nil && k8sErrors.IsAlreadyExists(err) {
 			// The service may already exist and there is nothing to update
 			return nil
@@ -540,15 +538,15 @@ func EnsureFuncService(client kubernetes.Interface, funcObj *kubelessApi.Functio
 	return err
 }
 
-func svcPort(funcObj *kubelessApi.Function) int32 {
-	if len(funcObj.Spec.ServiceSpec.Ports) != 0 {
-		return funcObj.Spec.ServiceSpec.Ports[0].Port
+func svcPort(triggerObj *kubelessApi.Trigger) int32 {
+	if len(triggerObj.Spec.ServiceSpec.Ports) != 0 {
+		return triggerObj.Spec.ServiceSpec.Ports[0].Port
 	}
 	return int32(8080)
 }
 
 // EnsureFuncDeployment creates/updates a function deployment
-func EnsureFuncDeployment(client kubernetes.Interface, funcObj *kubelessApi.Function, or []metav1.OwnerReference) error {
+func EnsureFuncDeployment(client kubernetes.Interface, triggerObj *kubelessApi.Trigger, funcObj *kubelessApi.Function, or []metav1.OwnerReference) error {
 
 	var err error
 
@@ -562,7 +560,7 @@ func EnsureFuncDeployment(client kubernetes.Interface, funcObj *kubelessApi.Func
 		// "targets")
 		"prometheus.io/scrape": "true",
 		"prometheus.io/path":   "/metrics",
-		"prometheus.io/port":   strconv.Itoa(int(svcPort(funcObj))),
+		"prometheus.io/port":   strconv.Itoa(int(svcPort(triggerObj))),
 	}
 
 	//add deployment
@@ -661,13 +659,13 @@ func EnsureFuncDeployment(client kubernetes.Interface, funcObj *kubelessApi.Func
 	dpm.Spec.Template.Spec.Containers[0].Env = append(dpm.Spec.Template.Spec.Containers[0].Env,
 		v1.EnvVar{
 			Name:  "FUNC_PORT",
-			Value: strconv.Itoa(int(svcPort(funcObj))),
+			Value: strconv.Itoa(int(svcPort(triggerObj))),
 		},
 	)
 
 	dpm.Spec.Template.Spec.Containers[0].Name = funcObj.ObjectMeta.Name
 	dpm.Spec.Template.Spec.Containers[0].Ports = append(dpm.Spec.Template.Spec.Containers[0].Ports, v1.ContainerPort{
-		ContainerPort: svcPort(funcObj),
+		ContainerPort: svcPort(triggerObj),
 	})
 	dpm.Spec.Template.Spec.Containers[0].Env = append(dpm.Spec.Template.Spec.Containers[0].Env,
 		v1.EnvVar{
@@ -735,7 +733,7 @@ func EnsureFuncDeployment(client kubernetes.Interface, funcObj *kubelessApi.Func
 			Handler: v1.Handler{
 				HTTPGet: &v1.HTTPGetAction{
 					Path: "/healthz",
-					Port: intstr.FromInt(int(svcPort(funcObj))),
+					Port: intstr.FromInt(int(svcPort(triggerObj))),
 				},
 			},
 		}

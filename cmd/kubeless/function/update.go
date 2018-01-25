@@ -155,7 +155,7 @@ var updateCmd = &cobra.Command{
 			logrus.Fatalf("Invalid port number %d specified", *port)
 		}
 		cli := utils.GetClientOutOfCluster()
-		f, err := getFunctionDescription(cli, funcName, ns, handler, file, funcDeps, runtime, topic, schedule, runtimeImage, mem, timeout, triggerHTTP, headless, port, envs, labels, previousFunction)
+		f, err := getFunctionDescription(cli, funcName, ns, handler, file, funcDeps, runtime, topic, schedule, runtimeImage, mem, timeout, triggerHTTP, envs, labels, previousFunction)
 		if err != nil {
 			logrus.Fatal(err)
 		}
