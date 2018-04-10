@@ -6,6 +6,7 @@ DOCKER = docker
 CONTROLLER_IMAGE = kubeless-controller-manager:latest
 FUNCTION_IMAGE_BUILDER = kubeless-function-image-builder:latest
 KAFKA_CONTROLLER_IMAGE = kafka-trigger-controller:latest
+NATS_CONTROLLER_IMAGE = nats-trigger-controller:latest
 OS = linux
 ARCH = amd64
 BUNDLES = bundles
@@ -73,6 +74,15 @@ kafka-controller-build:
 
 kafka-controller-image: docker/kafka-controller
 	$(DOCKER) build -t $(KAFKA_CONTROLLER_IMAGE) $<
+
+nats-controller-build:
+	./script/nats-controller.sh -os=$(OS) -arch=$(ARCH)
+
+nats-controller-image: docker/nats-controller
+	$(DOCKER) build -t $(NATS_CONTROLLER_IMAGE) $<
+
+docker/nats-controller: nats-controller-build
+	cp $(BUNDLES)/kubeless_$(OS)-$(ARCH)/nats-controller $@
 
 update:
 	./hack/update-codegen.sh

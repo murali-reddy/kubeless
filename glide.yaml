@@ -33,3 +33,5 @@ import:
   version: v2.1.12
 - package: k8s.io/apiextensions-apiserver
   version: kubernetes-1.8.7
+- package: github.com/nats-io/go-nats
+  version: v1.5.0 
