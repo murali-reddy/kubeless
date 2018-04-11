@@ -1,11 +1,15 @@
-hash: 51caefc0bfe0613ba51f3bce7b01549e10bdaddb86d59bb025214be39f7515fd
-updated: 2018-03-14T09:36:08.637342421+05:30
+hash: 4bb6ff376e7eabbf18552c0983acd722084588eb34de8a5b4a9c93f42da16812
+updated: 2018-04-11T05:22:10.447915525+05:30
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
   subpackages:
   - compute/metadata
   - internal
+- name: github.com/beorn7/perks
+  version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
+  subpackages:
+  - quantile
 - name: github.com/bsm/sarama-cluster
   version: 3001c2453136632aa3219a58ea3795bb584b83b5
 - name: github.com/coreos/prometheus-operator
@@ -98,6 +102,12 @@ imports:
   - jwriter
 - name: github.com/mattn/go-runewidth
   version: a9d6d1e4dc51df2130326793d49971f238839169
+- name: github.com/matttproud/golang_protobuf_extensions
+  version: fc2b8d3a73c4867e51861bbdd5ae3c1f0869dd6a
+  subpackages:
+  - pbutil
+- name: github.com/nats-io/go-nats
+  version: 062418ea1c2181f52dc0f954f6204370519a868b
 - name: github.com/peterbourgon/diskv
   version: 5f041e8faa004a95c88a202771f4cc3e991971e6
 - name: github.com/pierrec/lz4
@@ -108,6 +118,25 @@ imports:
   - xxHash32
 - name: github.com/pkg/errors
   version: 816c9085562cd7ee03e7f8188a1cfd942858cded
+- name: github.com/prometheus/client_golang
+  version: e11c6ff8170beca9d5fd8b938e71165eeec53ac6
+  subpackages:
+  - prometheus
+  - prometheus/promhttp
+- name: github.com/prometheus/client_model
+  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
+  subpackages:
+  - go
+- name: github.com/prometheus/common
+  version: 13ba4ddd0caa9c28ca7b7bffe1dfa9ed8d5ef207
+  subpackages:
+  - expfmt
+  - internal/bitbucket.org/ww/goautoneg
+  - model
+- name: github.com/prometheus/procfs
+  version: 65c1f6f8f0fc1e2185eb9863a3bc751496404259
+  subpackages:
+  - xfs
 - name: github.com/PuerkitoBio/purell
   version: 8a290539e2e8629dbc4e6bad948158f790ec31f4
 - name: github.com/PuerkitoBio/urlesc
@@ -321,6 +350,7 @@ imports:
   - kubernetes/typed/storage/v1beta1/fake
   - pkg/version
   - plugin/pkg/client/auth/gcp
+  - plugin/pkg/client/auth/oidc
   - rest
   - rest/fake
   - rest/watch

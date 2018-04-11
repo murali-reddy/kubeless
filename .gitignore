@@ -153,3 +153,4 @@ kubeless-openshift.yaml
 kubeless-rbac.yaml
 kubeless.yaml
 kafka-zookeeper.yaml
+nats.yaml

@@ -1,4 +1,6 @@
 package: github.com/kubeless/kubeless
+ignore:
+- kubeless
 import:
 - package: github.com/sirupsen/logrus
   version: 768a92a02685ee7535069fc1581341b41bab9b72

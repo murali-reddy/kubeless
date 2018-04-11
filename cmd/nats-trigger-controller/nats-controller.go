@@ -34,8 +34,8 @@ const (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "kafka-controller",
-	Short: "Kafka controller",
+	Use:   "nats-controller",
+	Short: "NATS controller",
 	Long:  globalUsage,
 	Run: func(cmd *cobra.Command, args []string) {
 		kubelessClient, err := utils.GetFunctionClientInCluster()
@@ -43,16 +43,16 @@ var rootCmd = &cobra.Command{
 			logrus.Fatalf("Cannot get kubeless client: %v", err)
 		}
 
-		kafkaTriggerCfg := controller.KafkaTriggerConfig{
+		natsTriggerCfg := controller.NatsTriggerConfig{
 			TriggerClient: kubelessClient,
 		}
 
-		kafkaTriggerController := controller.NewKafkaTriggerController(kafkaTriggerCfg)
+		natsTriggerController := controller.NewNatsTriggerController(natsTriggerCfg)
 
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
-		go kafkaTriggerController.Run(stopCh)
+		go natsTriggerController.Run(stopCh)
 
 		sigterm := make(chan os.Signal, 1)
 		signal.Notify(sigterm, syscall.SIGTERM)
@@ -62,7 +62,7 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
-	logrus.Infof("Running Kafka controller version: %v", version.Version)
+	logrus.Infof("Running NATS controller version: %v", version.Version)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -38,7 +38,7 @@ binary-cross:
 	$(KUBECFG) show -o yaml $< > $@.tmp
 	mv $@.tmp $@
 
-all-yaml: kubeless.yaml kubeless-rbac.yaml kubeless-openshift.yaml kafka-zookeeper.yaml
+all-yaml: kubeless.yaml kubeless-rbac.yaml kubeless-openshift.yaml kafka-zookeeper.yaml nats.yaml
 
 kubeless.yaml: kubeless.jsonnet
 
@@ -47,6 +47,8 @@ kubeless-rbac.yaml: kubeless-rbac.jsonnet kubeless.jsonnet
 kubeless-openshift.yaml: kubeless-openshift.jsonnet kubeless-rbac.jsonnet
 
 kafka-zookeeper.yaml: kafka-zookeeper.jsonnet
+
+nats.yaml: nats.jsonnet
 
 docker/controller-manager: controller-build
 	cp $(BUNDLES)/kubeless_$(OS)-$(ARCH)/kubeless-controller-manager $@
